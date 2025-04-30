@@ -6,8 +6,6 @@
   <title>マニュアル作成ツール</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdn.jsdelivr.net/npm/vue@3.2.31"></script>
-  <script src="https://cdn.jsdelivr.net/npm/jszip@3.7.1/dist/jszip.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
   <style>
     .shadow-card {
       box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
@@ -56,15 +54,6 @@
       margin-bottom: 15px;
     }
 
-    .file-upload {
-      border: 2px dashed #a0aec0;
-      padding: 20px;
-      width: 100%;
-      border-radius: 8px;
-      text-align: center;
-      color: #a0aec0;
-    }
-
     .sidebar {
       width: 250px;
       float: left;
@@ -97,15 +86,6 @@
       margin-bottom: 15px;
       font-size: 1.2rem;
       min-height: 200px;
-    }
-
-    .file-upload {
-      border: 2px dashed #a0aec0;
-      padding: 20px;
-      width: 100%;
-      border-radius: 8px;
-      text-align: center;
-      color: #a0aec0;
     }
 
     .action-buttons {
@@ -148,7 +128,7 @@
       <!-- 左サイドバー -->
       <div class="sidebar">
         <input v-model="searchQuery" type="text" placeholder="検索..." class="input-field mb-4" />
-        
+
         <div v-for="(item, index) in filteredManuals" :key="item.id" @click="selectManual(item.id)" class="manual-title">
           <p class="text-lg text-gray-700">{{ item.text.slice(0, 20) }}...</p>
         </div>
@@ -158,21 +138,25 @@
       <div class="content">
         <h2 class="text-2xl font-bold text-indigo-600 mb-4">新しいマニュアル作成</h2>
 
-        <!-- 新しいマニュアル作成のフォーム -->
+        <!-- カテゴリ選択 -->
         <select v-model="newCategory" class="select-category">
           <option value="">カテゴリを選択</option>
           <option v-for="category in categories" :key="category" :value="category">{{ category }}</option>
         </select>
 
+        <!-- 新しいマニュアル入力欄 -->
         <textarea v-model="newManual" placeholder="新しいマニュアルを入力..." class="input-field-large"></textarea>
 
-        <div class="file-upload mt-4">
-          <input type="file" @change="handleImageUpload" class="mb-4" />
-          <p>画像をアップロード</p>
-        </div>
-
+        <!-- アクションボタン -->
         <div class="action-buttons">
           <button @click="addManual" class="button w-1/3">マニュアル作成</button>
+        </div>
+
+        <!-- マニュアル詳細 -->
+        <div v-if="selectedManual" class="mt-8 shadow-card">
+          <h3 class="text-xl font-bold text-gray-800">マニュアル詳細</h3>
+          <p><strong>カテゴリ:</strong> {{ selectedManual.category }}</p>
+          <p><strong>内容:</strong> {{ selectedManual.text }}</p>
         </div>
       </div>
     </div>
@@ -191,7 +175,6 @@
           newCategory: "",
           searchQuery: "",
           categories: ["運用", "製品", "トラブルシューティング", "インストール", "手順"],
-          image: null,
         };
       },
       computed: {
@@ -216,15 +199,7 @@
         },
         selectManual(id) {
           this.selectedManual = this.manualList.find(item => item.id === id);
-        },
-        handleImageUpload(event) {
-          const file = event.target.files[0];
-          const reader = new FileReader();
-          reader.onload = (e) => {
-            this.image = e.target.result;
-          };
-          reader.readAsDataURL(file);
-        },
+        }
       },
     });
 
