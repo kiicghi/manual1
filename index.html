@@ -8,55 +8,110 @@
   <script src="https://cdn.jsdelivr.net/npm/vue@3.2.31"></script>
   <script src="https://cdn.jsdelivr.net/npm/jszip@3.7.1/dist/jszip.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
-</head>
-<body class="bg-gray-100">
+  <style>
+    .shadow-card {
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+      border-radius: 8px;
+      background-color: white;
+      padding: 20px;
+    }
 
-  <div id="app" class="max-w-4xl mx-auto p-6">
-    <h1 class="text-4xl font-bold mb-6 text-center text-indigo-600">マニュアル作成ツール</h1>
+    .button {
+      display: inline-block;
+      background-color: #4c51bf;
+      color: white;
+      padding: 10px 20px;
+      border-radius: 5px;
+      text-align: center;
+      cursor: pointer;
+    }
+
+    .button:hover {
+      background-color: #434190;
+    }
+
+    .button-secondary {
+      background-color: #e2e8f0;
+      color: #2d3748;
+    }
+
+    .button-secondary:hover {
+      background-color: #cbd5e0;
+    }
+
+    .input-field {
+      width: 100%;
+      padding: 12px;
+      border: 1px solid #e2e8f0;
+      border-radius: 8px;
+      margin-bottom: 15px;
+    }
+
+    .select-category {
+      width: 100%;
+      padding: 12px;
+      border: 1px solid #e2e8f0;
+      border-radius: 8px;
+      background-color: #f7fafc;
+    }
+
+    .file-upload {
+      border: 2px dashed #a0aec0;
+      padding: 20px;
+      width: 100%;
+      border-radius: 8px;
+      text-align: center;
+      color: #a0aec0;
+    }
+  </style>
+</head>
+<body class="bg-gray-50">
+
+  <div id="app" class="max-w-4xl mx-auto p-6 space-y-6">
+    <h1 class="text-4xl font-bold text-center text-indigo-600">マニュアル作成ツール</h1>
 
     <!-- 検索機能 -->
-    <div class="flex mb-4">
-      <input v-model="searchQuery" type="text" placeholder="検索..." class="w-full p-3 border rounded-lg" />
+    <div>
+      <input v-model="searchQuery" type="text" placeholder="検索..." class="input-field" />
     </div>
 
     <!-- カテゴリ選択 -->
-    <div class="mb-4">
-      <select v-model="selectedCategory" class="w-full p-3 border rounded-lg">
+    <div>
+      <select v-model="selectedCategory" class="select-category">
         <option value="">全てのカテゴリ</option>
         <option v-for="category in categories" :key="category" :value="category">{{ category }}</option>
       </select>
     </div>
 
     <!-- マニュアルリスト -->
-    <div v-for="(item, index) in filteredManuals" :key="item.id" class="rounded-xl shadow-md bg-white p-6 mb-4">
+    <div v-for="(item, index) in filteredManuals" :key="item.id" class="shadow-card mb-4">
       <div v-if="editingId === item.id">
-        <textarea v-model="editText" class="mb-4 w-full p-3 border rounded-lg"></textarea>
+        <textarea v-model="editText" class="input-field mb-4" rows="4"></textarea>
         <div class="flex justify-end space-x-2">
-          <button @click="updateManual(item.id)" class="bg-blue-500 text-white px-4 py-2 rounded-lg">保存</button>
-          <button @click="cancelEdit" class="bg-gray-300 text-black px-4 py-2 rounded-lg">キャンセル</button>
+          <button @click="updateManual(item.id)" class="button">保存</button>
+          <button @click="cancelEdit" class="button button-secondary">キャンセル</button>
         </div>
       </div>
       <div v-else>
         <div class="flex justify-between items-start">
-          <p class="text-base text-gray-800">{{ item.text }}</p>
-          <div class="relative inline-block">
-            <button @click="startEditing(item.id, item.text)" class="text-gray-500 px-3 py-2 hover:bg-gray-200 rounded-lg">編集</button>
-            <button @click="deleteManual(item.id)" class="text-red-500 px-3 py-2 hover:bg-gray-200 rounded-lg">削除</button>
+          <p class="text-lg text-gray-700">{{ item.text }}</p>
+          <div>
+            <button @click="startEditing(item.id, item.text)" class="text-indigo-500 mr-2">編集</button>
+            <button @click="deleteManual(item.id)" class="text-red-500">削除</button>
           </div>
         </div>
         <div class="mt-2">
-          <span class="inline-block bg-gray-200 text-gray-800 text-xs px-3 py-1 rounded-lg mr-2" v-for="tag in item.tags" :key="tag">{{ tag }}</span>
+          <span class="inline-block bg-gray-200 text-gray-700 text-xs px-3 py-1 rounded-lg mr-2" v-for="tag in item.tags" :key="tag">{{ tag }}</span>
         </div>
       </div>
     </div>
 
     <!-- 新しいマニュアル作成 -->
-    <div class="mt-6">
-      <textarea v-model="newManual" placeholder="新しいマニュアルを入力..." class="mb-4 w-full p-3 border rounded-lg"></textarea>
+    <div class="shadow-card">
+      <textarea v-model="newManual" placeholder="新しいマニュアルを入力..." class="input-field" rows="4"></textarea>
 
-      <!-- カテゴリとタグの選択 -->
-      <div class="mb-4">
-        <select v-model="newCategory" class="w-full p-3 border rounded-lg">
+      <div>
+        <select v-model="newCategory" class="select-category">
           <option value="">カテゴリを選択</option>
           <option v-for="category in categories" :key="category" :value="category">{{ category }}</option>
         </select>
@@ -64,29 +119,30 @@
 
       <!-- テンプレートボタン -->
       <div class="space-x-2 mb-4">
-        <button v-for="(tpl, idx) in templates" :key="idx" @click="applyTemplate(tpl)" class="bg-gray-200 text-gray-700 px-4 py-2 rounded-lg">
+        <button v-for="(tpl, idx) in templates" :key="idx" @click="applyTemplate(tpl)" class="button button-secondary">
           {{ tpl }}
         </button>
       </div>
 
       <!-- 画像挿入 -->
-      <input type="file" @change="handleImageUpload" class="mb-4" />
+      <div class="file-upload">
+        <input type="file" @change="handleImageUpload" class="mb-4" />
+        <p>画像をアップロード</p>
+      </div>
 
-      <!-- 新しいマニュアル送信ボタン -->
-      <button @click="addManual" class="bg-blue-500 text-white px-4 py-2 rounded-lg">マニュアル作成</button>
+      <button @click="addManual" class="button w-full">マニュアル作成</button>
     </div>
 
     <!-- フィードバック収集 -->
-    <div class="mt-6">
-      <textarea v-model="feedbackText" placeholder="フィードバックを入力..." class="w-full p-3 border rounded-lg"></textarea>
-      <button @click="submitFeedback" class="bg-green-500 text-white px-4 py-2 rounded-lg mt-2">フィードバック送信</button>
+    <div class="shadow-card">
+      <textarea v-model="feedbackText" placeholder="フィードバックを入力..." class="input-field" rows="4"></textarea>
+      <button @click="submitFeedback" class="button w-full mt-2">フィードバック送信</button>
     </div>
 
     <!-- PDFエクスポートボタン -->
-    <div class="mt-6 text-center">
-      <button @click="exportToPDF" class="bg-indigo-500 text-white px-4 py-2 rounded-lg">PDFとしてエクスポート</button>
+    <div class="text-center">
+      <button @click="exportToPDF" class="button">PDFとしてエクスポート</button>
     </div>
-
   </div>
 
   <script>
